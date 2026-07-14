@@ -1,0 +1,579 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Socialbotic — schedule once, post on autopilot</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --ink:#0A1B3D;--ink-2:#3A4A6B;--muted:#7A88A6;--line:#E4E9F2;--bg:#F7F9FC;--card:#FFFFFF;
+    --blue:#0B5CD5;--blue-2:#2E80F2;--blue-ink:#0A4CC0;--mint:#0FA968;--amber:#E0921A;--slate:#8592AC;
+    --radius:16px;--shadow:0 1px 2px rgba(10,27,61,.06), 0 8px 24px rgba(10,27,61,.06);
+  }
+  *{box-sizing:border-box} html,body{margin:0;padding:0}
+  body{font-family:'Inter',system-ui,sans-serif;color:var(--ink);background:var(--bg);-webkit-font-smoothing:antialiased;line-height:1.5}
+  h1,h2,h3,.display{font-family:'Space Grotesk',sans-serif;letter-spacing:-.02em}
+  a{color:inherit;text-decoration:none} button{font-family:inherit;cursor:pointer;border:none;background:none}
+  .hidden{display:none !important}
+  .btn{display:inline-flex;align-items:center;gap:8px;padding:11px 18px;border-radius:12px;font-weight:600;font-size:14px;transition:transform .08s ease, box-shadow .2s ease, background .2s ease}
+  .btn-primary{background:var(--blue);color:#fff;box-shadow:0 6px 16px rgba(11,92,213,.28)}
+  .btn-primary:hover{background:var(--blue-ink)} .btn-primary:active{transform:translateY(1px)}
+  .btn-ghost{background:transparent;color:var(--ink);border:1px solid var(--line)}
+  .btn-ghost:hover{border-color:var(--blue);color:var(--blue)}
+  .logo-mark{width:30px;height:30px;border-radius:8px;display:block}
+  .wordmark{font-family:'Space Grotesk';font-weight:700;font-size:19px;letter-spacing:-.02em}
+  .nav{position:sticky;top:0;z-index:20;background:rgba(247,249,252,.82);backdrop-filter:saturate(180%) blur(12px);border-bottom:1px solid var(--line)}
+  .nav-inner{max-width:1120px;margin:0 auto;padding:16px 24px;display:flex;align-items:center;justify-content:space-between}
+  .nav-brand{display:flex;align-items:center;gap:11px}
+  .nav-links{display:flex;align-items:center;gap:28px}
+  .nav-links a{font-size:14px;color:var(--ink-2);font-weight:500} .nav-links a:hover{color:var(--ink)}
+  .hero{max-width:1120px;margin:0 auto;padding:96px 24px 40px}
+  .eyebrow{display:inline-flex;align-items:center;gap:8px;font-size:12.5px;font-weight:600;color:var(--blue);background:#EAF1FE;padding:6px 12px;border-radius:100px;margin-bottom:26px}
+  .hero h1{font-size:clamp(38px,6vw,68px);line-height:1.02;font-weight:700;margin:0 0 22px;max-width:16ch}
+  .hero h1 .grad{background:linear-gradient(100deg,var(--blue-2),var(--blue-ink));-webkit-background-clip:text;background-clip:text;color:transparent}
+  .hero p.lede{font-size:19px;color:var(--ink-2);max-width:54ch;margin:0 0 34px}
+  .hero-cta{display:flex;gap:14px;flex-wrap:wrap;align-items:center}
+  .hero-note{font-size:13px;color:var(--muted);margin-top:16px}
+  .hero-preview{margin-top:72px;border-radius:20px;border:1px solid var(--line);background:var(--card);box-shadow:var(--shadow);overflow:hidden}
+  .hp-bar{display:flex;align-items:center;gap:8px;padding:14px 18px;border-bottom:1px solid var(--line)}
+  .hp-dot{width:11px;height:11px;border-radius:50%}
+  .hp-body{display:grid;grid-template-columns:1.1fr 1fr;gap:0}
+  .hp-col{padding:26px} .hp-col + .hp-col{border-left:1px solid var(--line)}
+  .hp-h{font-size:12px;text-transform:uppercase;letter-spacing:.08em;color:var(--muted);font-weight:600;margin-bottom:16px}
+  .mini-post{border:1px solid var(--line);border-radius:12px;padding:14px 16px;margin-bottom:12px;background:#fff}
+  .mini-post .mp-top{display:flex;justify-content:space-between;align-items:center;margin-bottom:8px}
+  .mini-post p{margin:0;font-size:13.5px;color:var(--ink-2)}
+  .chip{font-size:11px;font-weight:600;padding:3px 9px;border-radius:100px}
+  .chip.sched{background:#FCF1DD;color:var(--amber)} .chip.pub{background:#E3F6ED;color:var(--mint)} .chip.draft{background:#EEF1F6;color:var(--slate)}
+  .cal-mini{display:grid;grid-template-columns:repeat(7,1fr);gap:6px}
+  .cal-mini .cm-cell{aspect-ratio:1;border-radius:8px;background:#F2F5FA;display:flex;align-items:center;justify-content:center;font-size:12px;color:var(--muted);position:relative}
+  .cal-mini .cm-cell.on{background:#EAF1FE;color:var(--blue);font-weight:600}
+  .cal-mini .cm-cell.on::after{content:"";position:absolute;bottom:5px;width:5px;height:5px;border-radius:50%;background:var(--blue)}
+  .section{max-width:1120px;margin:0 auto;padding:70px 24px}
+  .section-head{margin-bottom:44px}
+  .section-head h2{font-size:clamp(28px,4vw,40px);margin:0 0 12px}
+  .section-head p{color:var(--ink-2);font-size:17px;max-width:52ch;margin:0}
+  .steps{display:grid;grid-template-columns:repeat(3,1fr);gap:20px}
+  .step{background:var(--card);border:1px solid var(--line);border-radius:var(--radius);padding:28px}
+  .step-n{font-family:'Space Grotesk';font-weight:700;font-size:14px;color:var(--blue);border:1px solid #CFE0FB;background:#F1F6FE;width:34px;height:34px;border-radius:9px;display:flex;align-items:center;justify-content:center;margin-bottom:18px}
+  .step h3{font-size:19px;margin:0 0 8px} .step p{margin:0;color:var(--ink-2);font-size:14.5px}
+  .cta-band{max-width:1120px;margin:20px auto 90px;padding:0 24px}
+  .cta-inner{background:linear-gradient(120deg,var(--blue-ink),var(--blue-2));border-radius:24px;padding:56px 48px;color:#fff}
+  .cta-inner h2{color:#fff;font-size:clamp(26px,3.4vw,38px);margin:0 0 12px;max-width:20ch}
+  .cta-inner p{color:rgba(255,255,255,.85);margin:0 0 26px;max-width:46ch;font-size:16px}
+  .cta-inner .btn-primary{background:#fff;color:var(--blue-ink);box-shadow:0 8px 24px rgba(0,0,0,.18)}
+  .footer{border-top:1px solid var(--line);padding:28px 24px;text-align:center;color:var(--muted);font-size:13px}
+  .auth-overlay{position:fixed;inset:0;background:rgba(10,27,61,.42);backdrop-filter:blur(4px);z-index:50;display:flex;align-items:center;justify-content:center;padding:20px}
+  .auth-card{background:#fff;border-radius:20px;width:100%;max-width:420px;padding:34px;box-shadow:0 20px 60px rgba(10,27,61,.28);position:relative}
+  .auth-card h2{font-size:24px;margin:14px 0 6px} .auth-card .sub{color:var(--ink-2);font-size:14px;margin:0 0 24px}
+  .field{margin-bottom:16px}
+  .field label{display:block;font-size:13px;font-weight:600;margin-bottom:7px;color:var(--ink)}
+  .field input{width:100%;padding:12px 14px;border:1px solid var(--line);border-radius:11px;font-size:14px;font-family:inherit;color:var(--ink);outline:none;transition:border .15s}
+  .field input:focus{border-color:var(--blue)}
+  .auth-switch{text-align:center;font-size:13.5px;color:var(--ink-2);margin-top:18px}
+  .auth-switch button{color:var(--blue);font-weight:600}
+  .auth-x{position:absolute;top:18px;right:20px;font-size:22px;color:var(--muted)}
+  .app{display:none;min-height:100vh;grid-template-columns:236px 1fr}
+  .side{background:#0A1B3D;color:#fff;padding:22px 16px;display:flex;flex-direction:column;position:sticky;top:0;height:100vh}
+  .side-brand{display:flex;align-items:center;gap:11px;padding:6px 8px 22px} .side-brand .wordmark{color:#fff}
+  .side-nav{display:flex;flex-direction:column;gap:4px}
+  .side-nav button{display:flex;align-items:center;gap:12px;padding:11px 13px;border-radius:11px;color:#AEBBD6;font-size:14.5px;font-weight:500;width:100%;text-align:left;transition:.15s}
+  .side-nav button:hover{background:rgba(255,255,255,.06);color:#fff}
+  .side-nav button.active{background:var(--blue);color:#fff}
+  .side-nav svg{width:18px;height:18px;flex-shrink:0}
+  .side-foot{margin-top:auto;padding:14px 10px 4px;border-top:1px solid rgba(255,255,255,.1)}
+  .side-user{display:flex;align-items:center;gap:10px;font-size:13px;color:#AEBBD6}
+  .side-avatar{width:32px;height:32px;border-radius:50%;background:linear-gradient(135deg,var(--blue-2),var(--blue-ink));display:flex;align-items:center;justify-content:center;font-weight:600;color:#fff;font-size:13px}
+  .side-foot .signout{margin-top:12px;font-size:12.5px;color:#7C8AAA} .side-foot .signout:hover{color:#fff}
+  .main{padding:34px 40px;max-width:1000px}
+  .page-head{display:flex;justify-content:space-between;align-items:flex-end;margin-bottom:28px;gap:16px;flex-wrap:wrap}
+  .page-head h1{font-size:28px;margin:0 0 4px} .page-head p{margin:0;color:var(--ink-2);font-size:14.5px}
+  .card{background:var(--card);border:1px solid var(--line);border-radius:var(--radius);box-shadow:var(--shadow)} .card-pad{padding:24px}
+  .compose-grid{display:grid;grid-template-columns:1.3fr 1fr;gap:22px}
+  textarea.post-text{width:100%;min-height:150px;resize:vertical;padding:15px;border:1px solid var(--line);border-radius:12px;font-family:inherit;font-size:15px;color:var(--ink);outline:none;line-height:1.55}
+  textarea.post-text:focus{border-color:var(--blue)}
+  .compose-meta{display:flex;gap:14px;margin-top:16px;flex-wrap:wrap}
+  .compose-meta .field{margin:0;flex:1;min-width:140px}
+  .img-drop{border:1.5px dashed var(--line);border-radius:12px;height:100%;min-height:210px;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;color:var(--muted);padding:20px;cursor:pointer;transition:.15s;background:#FBFCFE}
+  .img-drop:hover{border-color:var(--blue);color:var(--blue);background:#F4F8FE}
+  .img-drop img{max-width:100%;max-height:220px;border-radius:9px}
+  .img-drop .di-icon{width:40px;height:40px;margin-bottom:10px;opacity:.6}
+  .row-actions{display:flex;justify-content:flex-end;gap:12px;margin-top:20px}
+  .char-count{font-size:12.5px;color:var(--muted);align-self:center;margin-right:auto}
+  .q-tabs{display:flex;gap:8px;margin-bottom:20px}
+  .q-tabs button{padding:8px 15px;border-radius:100px;font-size:13.5px;font-weight:600;color:var(--ink-2);border:1px solid var(--line)}
+  .q-tabs button.active{background:var(--ink);color:#fff;border-color:var(--ink)}
+  .q-item{display:flex;gap:16px;padding:18px;border-bottom:1px solid var(--line)} .q-item:last-child{border-bottom:none}
+  .q-thumb{width:64px;height:64px;border-radius:10px;object-fit:cover;flex-shrink:0;background:#EEF2F8;display:flex;align-items:center;justify-content:center;color:var(--muted);font-size:11px}
+  .q-body{flex:1;min-width:0}
+  .q-body .q-meta{display:flex;align-items:center;gap:10px;margin-bottom:6px}
+  .q-date{font-size:12.5px;color:var(--muted);font-weight:500}
+  .q-body p{margin:0;font-size:14px;color:var(--ink-2);overflow:hidden;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical}
+  .q-tools{display:flex;gap:6px;align-self:flex-start}
+  .q-tools button{width:32px;height:32px;border-radius:9px;border:1px solid var(--line);color:var(--muted);display:flex;align-items:center;justify-content:center}
+  .q-tools button:hover{border-color:var(--blue);color:var(--blue)} .q-tools svg{width:15px;height:15px}
+  .empty{text-align:center;padding:56px 20px;color:var(--muted)}
+  .empty h3{color:var(--ink);margin:12px 0 6px;font-size:18px}
+  .cal-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:18px}
+  .cal-head h2{font-size:20px;margin:0}
+  .cal-nav{display:flex;gap:8px}
+  .cal-nav button{width:36px;height:36px;border-radius:10px;border:1px solid var(--line);color:var(--ink-2);display:flex;align-items:center;justify-content:center;font-size:18px}
+  .cal-nav button:hover{border-color:var(--blue);color:var(--blue)}
+  .cal-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:8px}
+  .cal-dow{font-size:11.5px;text-transform:uppercase;letter-spacing:.06em;color:var(--muted);text-align:center;font-weight:600;padding-bottom:6px}
+  .cal-cell{min-height:96px;border:1px solid var(--line);border-radius:11px;padding:8px;background:#fff;overflow:hidden}
+  .cal-cell.blank{background:transparent;border:none}
+  .cal-cell.today{border-color:var(--blue);box-shadow:0 0 0 1px var(--blue) inset}
+  .cal-num{font-size:12px;color:var(--muted);font-weight:600;margin-bottom:6px}
+  .cal-post{font-size:11px;background:#EAF1FE;color:var(--blue-ink);border-radius:6px;padding:3px 6px;margin-bottom:4px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;cursor:pointer}
+  .cal-post.pub{background:#E3F6ED;color:#0A7A4A}
+  .acct{display:flex;align-items:center;gap:16px;padding:20px;border:1px solid var(--line);border-radius:var(--radius);background:#fff}
+  .acct-logo{width:52px;height:52px;border-radius:12px;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+  .acct-logo.li{background:#0A66C2}
+  .acct-info{flex:1} .acct-info h3{margin:0 0 3px;font-size:16px} .acct-info p{margin:0;font-size:13.5px;color:var(--muted)}
+  .badge-on{font-size:12px;font-weight:600;color:var(--mint);background:#E3F6ED;padding:5px 12px;border-radius:100px}
+  .acct.soon{opacity:.6} .badge-soon{font-size:12px;font-weight:600;color:var(--muted);background:#EEF1F6;padding:5px 12px;border-radius:100px}
+  .q-item{cursor:pointer;transition:background .12s} .q-item:hover{background:#FBFCFE}
+  .modal-overlay{position:fixed;inset:0;background:rgba(10,27,61,.42);backdrop-filter:blur(4px);z-index:60;display:flex;align-items:center;justify-content:center;padding:20px}
+  .modal-card{background:#fff;border-radius:20px;width:100%;max-width:580px;max-height:92vh;overflow:auto;padding:30px;box-shadow:0 20px 60px rgba(10,27,61,.28);position:relative}
+  .modal-card h2{font-size:22px;margin:0 0 4px}
+  .modal-card .msub{font-size:13px;margin:0 0 20px}
+  .modal-x{position:absolute;top:18px;right:20px;font-size:22px;color:var(--muted)}
+  .editor-img{width:100%;border-radius:12px;border:1px solid var(--line);margin-bottom:10px;max-height:240px;object-fit:contain;background:#F7F9FC;display:block}
+  .editor-imgbtn{font-size:13px;color:var(--blue);font-weight:600}
+  .editor-imgbtn.muted{color:var(--muted)}
+  .modal-foot{display:flex;gap:10px;align-items:center;margin-top:24px}
+  .modal-foot .del{margin-right:auto;color:#C0392B;font-size:13.5px;font-weight:600}
+  .modal-foot .del:hover{text-decoration:underline}
+  .toast{position:fixed;bottom:26px;left:50%;transform:translateX(-50%) translateY(20px);background:var(--ink);color:#fff;padding:13px 22px;border-radius:12px;font-size:14px;font-weight:500;box-shadow:0 12px 30px rgba(10,27,61,.3);opacity:0;transition:.25s;z-index:80;max-width:90vw;text-align:center}
+  .toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+  @media(max-width:860px){
+    .hp-body{grid-template-columns:1fr} .hp-col + .hp-col{border-left:none;border-top:1px solid var(--line)}
+    .steps{grid-template-columns:1fr} .compose-grid{grid-template-columns:1fr}
+    .app{grid-template-columns:1fr}
+    .side{position:static;height:auto;flex-direction:row;align-items:center;gap:14px;padding:12px}
+    .side-brand{padding:0;flex:1} .side-nav{flex-direction:row;gap:4px} .side-nav button span{display:none}
+    .side-foot{display:none} .main{padding:22px} .nav-links{display:none}
+  }
+</style>
+</head>
+<body>
+
+<div id="landing">
+  <nav class="nav"><div class="nav-inner">
+    <div class="nav-brand"><span id="logoNav"></span><span class="wordmark">socialbotic</span></div>
+    <div class="nav-links">
+      <a href="#how">How it works</a><a href="#why">Why</a>
+      <button class="btn btn-ghost" onclick="openAuth('login')">Log in</button>
+      <button class="btn btn-primary" onclick="openAuth('signup')">Start free</button>
+    </div>
+  </div></nav>
+
+  <header class="hero">
+    <span class="eyebrow">◆ LinkedIn autopilot for founders</span>
+    <h1>Plan a month of LinkedIn <span class="grad">in one sitting.</span></h1>
+    <p class="lede">Line up your posts and images once. Socialbotic schedules them and publishes to your profile on the days you pick — so you stop thinking about it every morning.</p>
+    <div class="hero-cta">
+      <button class="btn btn-primary" onclick="openAuth('signup')">Start free →</button>
+      <button class="btn btn-ghost" onclick="document.getElementById('how').scrollIntoView({behavior:'smooth'})">See how it works</button>
+    </div>
+    <p class="hero-note">No card required · Connect one LinkedIn profile to start</p>
+    <div class="hero-preview">
+      <div class="hp-bar"><span class="hp-dot" style="background:#FF5F57"></span><span class="hp-dot" style="background:#FEBC2E"></span><span class="hp-dot" style="background:#28C840"></span></div>
+      <div class="hp-body">
+        <div class="hp-col">
+          <div class="hp-h">This week's queue</div>
+          <div class="mini-post"><div class="mp-top"><span class="q-date">Mon · 9:00 AM</span><span class="chip pub">Published</span></div><p>Bought lists rot at ~2% a month. Here's the math on why "cheap data" is the most expensive line in your pipeline…</p></div>
+          <div class="mini-post"><div class="mp-top"><span class="q-date">Tue · 9:00 AM</span><span class="chip sched">Scheduled</span></div><p>We ran the same campaign on a scraped list and a verified one. The reply-rate gap wasn't small…</p></div>
+          <div class="mini-post"><div class="mp-top"><span class="q-date">Wed · 9:00 AM</span><span class="chip sched">Scheduled</span></div><p>Your ICP isn't a job title. It's a trigger. Three we watch for before we ever send…</p></div>
+        </div>
+        <div class="hp-col"><div class="hp-h">July</div><div class="cal-mini" id="heroCal"></div></div>
+      </div>
+    </div>
+  </header>
+
+  <section class="section" id="how">
+    <div class="section-head"><h2>Three steps, then it runs itself.</h2><p>You stay in control of what goes out. Socialbotic just handles the part you hate — remembering to post.</p></div>
+    <div class="steps">
+      <div class="step"><div class="step-n">1</div><h3>Drop in your posts</h3><p>Add your writing and an image for each post, or bring a month you've already drafted. Set the day and time for each.</p></div>
+      <div class="step"><div class="step-n">2</div><h3>Approve the queue</h3><p>See the whole month on one calendar. Edit, reorder, or cut anything before it's live. Nothing posts without your sign-off.</p></div>
+      <div class="step"><div class="step-n">3</div><h3>It posts for you</h3><p>On each scheduled day, Socialbotic publishes straight to your LinkedIn profile. You get your mornings back.</p></div>
+    </div>
+  </section>
+
+  <section class="section" id="why" style="padding-top:20px">
+    <div class="section-head"><h2>Built for people running more than one thing.</h2><p>If you've got several projects, you can't spend an hour a day on any one feed. Batch the work, automate the delivery.</p></div>
+    <div class="steps">
+      <div class="step"><div class="step-n">◆</div><h3>Batch once a month</h3><p>Sit down once, line up 30 days, walk away. No daily blank-page dread.</p></div>
+      <div class="step"><div class="step-n">◆</div><h3>You approve, always</h3><p>A real queue you review. The AI drafts; you decide what actually ships.</p></div>
+      <div class="step"><div class="step-n">◆</div><h3>One profile to start</h3><p>Begin with your personal LinkedIn. Add more platforms as they come online.</p></div>
+    </div>
+  </section>
+
+  <div class="cta-band"><div class="cta-inner">
+    <h2>Stop posting by hand. Start scheduling by month.</h2>
+    <p>Set up your first week in a few minutes and see the whole thing run on its own.</p>
+    <button class="btn btn-primary" onclick="openAuth('signup')">Start free →</button>
+  </div></div>
+  <div class="footer">© 2026 Socialbotic · A PublicLeads project</div>
+</div>
+
+<div class="auth-overlay hidden" id="authOverlay">
+  <div class="auth-card">
+    <button class="auth-x" onclick="closeAuth()">×</button>
+    <span id="logoAuth"></span>
+    <h2 id="authTitle">Create your account</h2>
+    <p class="sub" id="authSub">Start scheduling in a couple of minutes.</p>
+    <div class="field" id="nameField"><label>Name</label><input id="authName" type="text" placeholder="Rundong Li"></div>
+    <div class="field"><label>Email</label><input id="authEmail" type="email" placeholder="you@publicleads.com"></div>
+    <div class="field"><label>Password</label><input id="authPass" type="password" placeholder="••••••••"></div>
+    <button class="btn btn-primary" style="width:100%;justify-content:center" onclick="doAuth()" id="authBtn">Create account</button>
+    <div class="auth-switch" id="authSwitch"></div>
+  </div>
+</div>
+
+<div class="app" id="app">
+  <aside class="side">
+    <div class="side-brand"><span id="logoSide"></span><span class="wordmark">socialbotic</span></div>
+    <nav class="side-nav">
+      <button data-view="compose" onclick="go('compose')" class="active"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 5v14M5 12h14"/></svg><span>New post</span></button>
+      <button data-view="queue" onclick="go('queue')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M8 6h13M8 12h13M8 18h13M3 6h.01M3 12h.01M3 18h.01"/></svg><span>Queue</span></button>
+      <button data-view="calendar" onclick="go('calendar')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></svg><span>Calendar</span></button>
+      <button data-view="accounts" onclick="go('accounts')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg><span>Accounts</span></button>
+    </nav>
+    <div class="side-foot">
+      <div class="side-user"><div class="side-avatar" id="sideAvatar">R</div><div><div style="color:#fff;font-weight:600" id="sideName">—</div><div id="sideEmail" style="font-size:11.5px">—</div></div></div>
+      <button class="signout" onclick="signOut()">Sign out</button>
+    </div>
+  </aside>
+
+  <main class="main">
+    <section id="view-compose">
+      <div class="page-head"><div><h1>New post</h1><p>Write it, add an image, pick when it goes out.</p></div></div>
+      <div class="card card-pad">
+        <div class="compose-grid">
+          <div>
+            <textarea class="post-text" id="cText" placeholder="What do you want to say? Start with the pain — the specific problem your reader is living with today…" oninput="updateCount()"></textarea>
+            <div class="compose-meta">
+              <div class="field"><label>Publish date</label><input type="date" id="cDate"></div>
+              <div class="field"><label>Time</label><input type="time" id="cTime" value="09:00"></div>
+            </div>
+          </div>
+          <div>
+            <label class="field" style="display:block;margin-bottom:8px;font-weight:600;font-size:13px">Image</label>
+            <div class="img-drop" id="imgDrop" onclick="document.getElementById('cImg').click()">
+              <svg class="di-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><path d="m21 15-5-5L5 21"/></svg>
+              <div>Click to add an image<br><span style="font-size:12px">PNG or JPG · square works best</span></div>
+            </div>
+            <input type="file" id="cImg" accept="image/*" class="hidden" onchange="previewImg(event)">
+          </div>
+        </div>
+        <div class="row-actions">
+          <span class="char-count" id="charCount">0 characters</span>
+          <button class="btn btn-ghost" onclick="addPost('draft')">Save as draft</button>
+          <button class="btn btn-primary" onclick="addPost('scheduled')">Schedule post</button>
+        </div>
+      </div>
+    </section>
+
+    <section id="view-queue" class="hidden">
+      <div class="page-head"><div><h1>Queue</h1><p>Click any post to review, edit, and approve it for scheduling.</p></div><button class="btn btn-primary" onclick="go('compose')">+ New post</button></div>
+      <div class="q-tabs">
+        <button class="active" data-filter="all" onclick="setFilter('all')">All</button>
+        <button data-filter="scheduled" onclick="setFilter('scheduled')">Scheduled</button>
+        <button data-filter="draft" onclick="setFilter('draft')">Drafts</button>
+        <button data-filter="published" onclick="setFilter('published')">Published</button>
+      </div>
+      <div class="card" id="queueList"></div>
+    </section>
+
+    <section id="view-calendar" class="hidden">
+      <div class="page-head"><div><h1>Calendar</h1><p>Your month at a glance.</p></div></div>
+      <div class="card card-pad">
+        <div class="cal-head"><h2 id="calTitle">—</h2><div class="cal-nav"><button onclick="calMove(-1)">‹</button><button onclick="calMove(1)">›</button></div></div>
+        <div class="cal-grid" id="calGrid"></div>
+      </div>
+    </section>
+
+    <section id="view-accounts" class="hidden">
+      <div class="page-head"><div><h1>Accounts</h1><p>The profiles Socialbotic can post to.</p></div></div>
+      <div style="display:flex;flex-direction:column;gap:14px;max-width:620px">
+        <div class="acct">
+          <div class="acct-logo li"><svg width="26" height="26" viewBox="0 0 24 24" fill="#fff"><path d="M4.98 3.5a2.5 2.5 0 1 0 0 5 2.5 2.5 0 0 0 0-5zM3 9h4v12H3zM9 9h3.8v1.7h.05c.53-1 1.83-2.05 3.77-2.05 4.03 0 4.78 2.65 4.78 6.1V21h-4v-5.3c0-1.27-.02-2.9-1.77-2.9-1.77 0-2.04 1.38-2.04 2.8V21H9z"/></svg></div>
+          <div class="acct-info"><h3>LinkedIn — Personal profile</h3><p id="acctName">posts publish here</p></div>
+          <span class="badge-on">Connected</span>
+        </div>
+        <div class="acct soon"><div class="acct-logo" style="background:#111"><svg width="22" height="22" viewBox="0 0 24 24" fill="#fff"><path d="M18.9 2H22l-7.3 8.3L23 22h-6.6l-5.2-6.8L5.3 22H2l7.8-8.9L1.6 2h6.8l4.7 6.2L18.9 2z"/></svg></div><div class="acct-info"><h3>X (Twitter)</h3><p>Coming soon</p></div><span class="badge-soon">Soon</span></div>
+        <div class="acct soon"><div class="acct-logo" style="background:linear-gradient(45deg,#F58529,#DD2A7B,#8134AF)"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2"><rect x="2" y="2" width="20" height="20" rx="5"/><circle cx="12" cy="12" r="4"/><circle cx="17.5" cy="6.5" r="1" fill="#fff" stroke="none"/></svg></div><div class="acct-info"><h3>Instagram</h3><p>Coming soon</p></div><span class="badge-soon">Soon</span></div>
+      </div>
+    </section>
+  </main>
+</div>
+
+<div class="modal-overlay hidden" id="editor">
+  <div class="modal-card">
+    <button class="modal-x" onclick="closeEditor()">×</button>
+    <h2>Review post</h2>
+    <p class="msub"><span id="edStatusChip"></span></p>
+    <textarea class="post-text" id="edText" style="min-height:190px"></textarea>
+    <div style="margin-top:16px">
+      <label style="font-weight:600;font-size:13px;display:block;margin-bottom:8px">Image</label>
+      <img id="edImg" class="editor-img hidden" alt="">
+      <button class="editor-imgbtn" onclick="document.getElementById('edImgFile').click()">Add / replace image</button>
+      <button class="editor-imgbtn muted" id="edImgRemove" style="margin-left:16px" onclick="removeEdImg()">Remove</button>
+      <input type="file" id="edImgFile" accept="image/*" class="hidden" onchange="edPreview(event)">
+    </div>
+    <div class="compose-meta" style="margin-top:18px">
+      <div class="field"><label>Publish date</label><input type="date" id="edDate"></div>
+      <div class="field"><label>Time</label><input type="time" id="edTime"></div>
+    </div>
+    <div class="modal-foot">
+      <button class="del" onclick="delFromEditor()">Delete</button>
+      <button class="btn btn-ghost" onclick="saveEdit()">Save changes</button>
+      <button class="btn btn-primary" onclick="approvePost()">Approve &amp; schedule</button>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script>
+/* ---------- Supabase ---------- */
+const SUPABASE_URL = 'https://uiruyvjupprfmdzfbbcu.supabase.co';
+const SUPABASE_KEY = 'sb_publishable_BeKLLYU4SAgksRdhVxJGrg_JslwZfD9';
+const sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+/* ---------- logo ---------- */
+const LOGO = `<svg class="logo-mark" viewBox="0 0 512 512" xmlns="http://www.w3.org/2000/svg"><defs><linearGradient id="lg" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#2E80F2"/><stop offset="1" stop-color="#0A4CC0"/></linearGradient></defs><rect width="512" height="512" rx="116" fill="url(#lg)"/><path d="M150 118h212a54 54 0 0 1 54 54v128a54 54 0 0 1-54 54h-96l-70 58v-58h-50a54 54 0 0 1-54-54v-128a54 54 0 0 1 54-54z" fill="#fff"/><path d="M286 150 196 250h44l-16 92 92-108h-46l30-76z" fill="#2E80F2"/></svg>`;
+['logoNav','logoSide'].forEach(id=>{const e=document.getElementById(id);if(e)e.innerHTML=LOGO;});
+document.getElementById('logoAuth').innerHTML = LOGO.replace('class="logo-mark"','class="logo-mark" style="width:38px;height:38px"');
+
+/* ---------- state ---------- */
+let POSTS = [];
+let CURRENT_USER = null;
+
+/* ---------- auth ---------- */
+let authMode='signup';
+function openAuth(mode){authMode=mode;renderAuth();document.getElementById('authOverlay').classList.remove('hidden')}
+function closeAuth(){document.getElementById('authOverlay').classList.add('hidden')}
+function renderAuth(){
+  const signup=authMode==='signup';
+  document.getElementById('authTitle').textContent=signup?'Create your account':'Welcome back';
+  document.getElementById('authSub').textContent=signup?'Start scheduling in a couple of minutes.':'Log in to your queue.';
+  document.getElementById('authBtn').textContent=signup?'Create account':'Log in';
+  document.getElementById('nameField').style.display=signup?'block':'none';
+  document.getElementById('authSwitch').innerHTML=signup
+    ? `Already have an account? <button onclick="switchAuth('login')">Log in</button>`
+    : `New here? <button onclick="switchAuth('signup')">Create account</button>`;
+}
+function switchAuth(m){authMode=m;renderAuth()}
+
+async function doAuth(){
+  const name=document.getElementById('authName').value.trim();
+  const email=document.getElementById('authEmail').value.trim();
+  const pass=document.getElementById('authPass').value;
+  if(!email||!pass){toast('Enter your email and password');return}
+  const btn=document.getElementById('authBtn'); btn.textContent='…';
+  let res;
+  if(authMode==='signup'){
+    res=await sb.auth.signUp({email,password:pass,options:{data:{name:name||email.split('@')[0]}}});
+  }else{
+    res=await sb.auth.signInWithPassword({email,password:pass});
+  }
+  btn.textContent=authMode==='signup'?'Create account':'Log in';
+  if(res.error){toast(res.error.message);return}
+  if(!res.data.session){toast('Account made — now log in with those details');switchAuth('login');return}
+  CURRENT_USER=res.data.session.user;
+  closeAuth();
+  await enterApp();
+  toast(authMode==='signup'?'Account created':'Logged in');
+}
+
+async function signOut(){
+  await sb.auth.signOut();
+  CURRENT_USER=null; POSTS=[];
+  document.getElementById('app').style.display='none';
+  document.getElementById('landing').style.display='block';
+  window.scrollTo(0,0);
+}
+
+/* ---------- app shell ---------- */
+async function enterApp(){
+  const u=CURRENT_USER;
+  const name=(u.user_metadata && u.user_metadata.name) || u.email.split('@')[0];
+  document.getElementById('landing').style.display='none';
+  document.getElementById('app').style.display='grid';
+  document.getElementById('sideName').textContent=name;
+  document.getElementById('sideEmail').textContent=u.email;
+  document.getElementById('sideAvatar').textContent=(name[0]||'U').toUpperCase();
+  document.getElementById('acctName').textContent=name+' · posts publish here';
+  const t=new Date();t.setDate(t.getDate()+1);
+  document.getElementById('cDate').value=t.toISOString().slice(0,10);
+  await loadPosts();
+  go('compose');
+}
+function go(view){
+  ['compose','queue','calendar','accounts'].forEach(v=>{document.getElementById('view-'+v).classList.toggle('hidden',v!==view)});
+  document.querySelectorAll('.side-nav button').forEach(b=>b.classList.toggle('active',b.dataset.view===view));
+  if(view==='queue')renderQueue();
+  if(view==='calendar')renderCal();
+}
+
+/* ---------- data ---------- */
+async function loadPosts(){
+  const {data,error}=await sb.from('posts').select('*').order('scheduled_date',{ascending:true});
+  if(error){toast('Load failed: '+error.message);POSTS=[];return}
+  POSTS=data||[];
+}
+
+let pendingImg=null;
+function previewImg(e){
+  const f=e.target.files[0];if(!f)return;
+  const r=new FileReader();
+  r.onload=()=>{pendingImg=r.result;document.getElementById('imgDrop').innerHTML=`<img src="${r.result}">`;};
+  r.readAsDataURL(f);
+}
+function updateCount(){document.getElementById('charCount').textContent=document.getElementById('cText').value.length+' characters'}
+
+async function addPost(status){
+  const text=document.getElementById('cText').value.trim();
+  const date=document.getElementById('cDate').value;
+  const time=document.getElementById('cTime').value||'09:00';
+  if(!text){toast('Add some text first');return}
+  if(status==='scheduled'&&!date){toast('Pick a date to schedule');return}
+  const {error}=await sb.from('posts').insert({
+    text, image_url:pendingImg, scheduled_date:date||null, scheduled_time:time, status
+  });
+  if(error){toast('Save failed: '+error.message);return}
+  document.getElementById('cText').value='';pendingImg=null;updateCount();
+  document.getElementById('imgDrop').innerHTML=`<svg class="di-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><path d="m21 15-5-5L5 21"/></svg><div>Click to add an image<br><span style="font-size:12px">PNG or JPG · square works best</span></div>`;
+  await loadPosts();
+  toast(status==='scheduled'?'Post scheduled':'Draft saved');
+  go('queue');
+}
+
+async function delPost(id){
+  const {error}=await sb.from('posts').delete().eq('id',id);
+  if(error){toast('Delete failed: '+error.message);return}
+  await loadPosts();renderQueue();toast('Post removed');
+}
+
+/* ---------- editor modal ---------- */
+let editingId=null, edImgData=null;
+function openEditor(id){
+  const p=POSTS.find(x=>String(x.id)===String(id));
+  if(!p)return;
+  editingId=p.id;
+  document.getElementById('edText').value=p.text||'';
+  document.getElementById('edStatusChip').innerHTML=chipFor(p.status);
+  document.getElementById('edDate').value=p.scheduled_date||'';
+  document.getElementById('edTime').value=p.scheduled_time||'09:00';
+  edImgData=p.image_url||null;
+  renderEdImg();
+  document.getElementById('editor').classList.remove('hidden');
+}
+function renderEdImg(){
+  const img=document.getElementById('edImg'), rm=document.getElementById('edImgRemove');
+  if(edImgData){img.src=edImgData;img.classList.remove('hidden');rm.classList.remove('hidden');}
+  else{img.classList.add('hidden');rm.classList.add('hidden');}
+}
+function edPreview(e){const f=e.target.files[0];if(!f)return;const r=new FileReader();r.onload=()=>{edImgData=r.result;renderEdImg();};r.readAsDataURL(f);}
+function removeEdImg(){edImgData=null;renderEdImg();}
+function closeEditor(){document.getElementById('editor').classList.add('hidden');editingId=null;edImgData=null;}
+
+async function saveEdit(){
+  if(!editingId)return;
+  const text=document.getElementById('edText').value.trim();
+  if(!text){toast('Post text can\u2019t be empty');return}
+  const {error}=await sb.from('posts').update({
+    text, image_url:edImgData,
+    scheduled_date:document.getElementById('edDate').value||null,
+    scheduled_time:document.getElementById('edTime').value||'09:00'
+  }).eq('id',editingId);
+  if(error){toast('Save failed: '+error.message);return}
+  await loadPosts();renderQueue();closeEditor();toast('Saved');
+}
+
+async function approvePost(){
+  if(!editingId)return;
+  const text=document.getElementById('edText').value.trim();
+  const date=document.getElementById('edDate').value;
+  if(!text){toast('Post text can\u2019t be empty');return}
+  if(!date){toast('Set a publish date to approve');return}
+  const {error}=await sb.from('posts').update({
+    text, image_url:edImgData, status:'scheduled',
+    scheduled_date:date,
+    scheduled_time:document.getElementById('edTime').value||'09:00'
+  }).eq('id',editingId);
+  if(error){toast('Approve failed: '+error.message);return}
+  await loadPosts();renderQueue();closeEditor();toast('Approved \u2014 scheduled for '+date);
+}
+
+async function delFromEditor(){
+  if(!editingId)return;
+  const id=editingId;
+  const {error}=await sb.from('posts').delete().eq('id',id);
+  if(error){toast('Delete failed: '+error.message);return}
+  await loadPosts();renderQueue();closeEditor();toast('Post removed');
+}
+
+/* ---------- queue ---------- */
+let filter='all';
+function setFilter(f){filter=f;document.querySelectorAll('.q-tabs button').forEach(b=>b.classList.toggle('active',b.dataset.filter===f));renderQueue()}
+function chipFor(s){return s==='published'?'<span class="chip pub">Published</span>':s==='scheduled'?'<span class="chip sched">Scheduled</span>':'<span class="chip draft">Draft</span>'}
+function fmtDate(d,t){if(!d)return'No date';const dt=new Date(d+'T'+(t||'09:00'));return dt.toLocaleDateString('en-US',{weekday:'short',month:'short',day:'numeric'})+' · '+dt.toLocaleTimeString('en-US',{hour:'numeric',minute:'2-digit'})}
+function escapeHtml(s){return (s||'').replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]))}
+function renderQueue(){
+  let posts=POSTS.slice();
+  if(filter!=='all')posts=posts.filter(p=>p.status===filter);
+  const el=document.getElementById('queueList');
+  if(!posts.length){el.innerHTML=`<div class="empty"><svg width="42" height="42" viewBox="0 0 24 24" fill="none" stroke="#C2CCDE" stroke-width="1.6"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></svg><h3>Nothing here yet</h3><p>Create a post and it'll show up in your queue.</p></div>`;return}
+  el.innerHTML=posts.map(p=>`
+    <div class="q-item" onclick="openEditor('${p.id}')">
+      <div class="q-thumb">${p.image_url?`<img src="${p.image_url}" style="width:100%;height:100%;object-fit:cover;border-radius:10px">`:'No image'}</div>
+      <div class="q-body">
+        <div class="q-meta">${chipFor(p.status)}<span class="q-date">${fmtDate(p.scheduled_date,p.scheduled_time)}</span></div>
+        <p>${escapeHtml(p.text)}</p>
+      </div>
+      <div class="q-tools"><button title="Delete" onclick="event.stopPropagation();delPost('${p.id}')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 6h18M8 6V4h8v2M6 6l1 14h10l1-14"/></svg></button></div>
+    </div>`).join('');
+}
+
+/* ---------- calendar ---------- */
+let calRef=new Date();
+function calMove(n){calRef.setMonth(calRef.getMonth()+n);renderCal()}
+function renderCal(){
+  const y=calRef.getFullYear(),m=calRef.getMonth();
+  document.getElementById('calTitle').textContent=calRef.toLocaleDateString('en-US',{month:'long',year:'numeric'});
+  const first=new Date(y,m,1).getDay(),days=new Date(y,m+1,0).getDate();
+  const todayStr=new Date().toISOString().slice(0,10);
+  const dow=['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
+  let html=dow.map(d=>`<div class="cal-dow">${d}</div>`).join('');
+  for(let i=0;i<first;i++)html+=`<div class="cal-cell blank"></div>`;
+  for(let d=1;d<=days;d++){
+    const ds=`${y}-${String(m+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
+    const dayPosts=POSTS.filter(p=>p.scheduled_date===ds);
+    html+=`<div class="cal-cell${ds===todayStr?' today':''}"><div class="cal-num">${d}</div>${dayPosts.map(p=>`<div class="cal-post ${p.status==='published'?'pub':''}" title="${escapeHtml(p.text)}">${escapeHtml((p.text||'').slice(0,22))}</div>`).join('')}</div>`;
+  }
+  document.getElementById('calGrid').innerHTML=html;
+}
+
+/* ---------- hero mini-calendar ---------- */
+(function(){const on=[7,8,9,10,11,14,15];let h='';for(let d=1;d<=28;d++)h+=`<div class="cm-cell${on.includes(d)?' on':''}">${d}</div>`;const el=document.getElementById('heroCal');if(el)el.innerHTML=h;})();
+
+/* ---------- toast ---------- */
+let toastT;
+function toast(msg){const t=document.getElementById('toast');t.textContent=msg;t.classList.add('show');clearTimeout(toastT);toastT=setTimeout(()=>t.classList.remove('show'),2600)}
+
+/* ---------- boot: restore session ---------- */
+(async()=>{
+  const {data}=await sb.auth.getSession();
+  if(data.session){CURRENT_USER=data.session.user;await enterApp();}
+})();
+</script>
+</body>
+</html>
