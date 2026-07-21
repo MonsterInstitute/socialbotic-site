@@ -67,6 +67,21 @@
   .cta-inner p{color:rgba(255,255,255,.85);margin:0 0 26px;max-width:46ch;font-size:16px}
   .cta-inner .btn-primary{background:#fff;color:var(--blue-ink);box-shadow:0 8px 24px rgba(0,0,0,.18)}
   .footer{border-top:1px solid var(--line);padding:28px 24px;text-align:center;color:var(--muted);font-size:13px}
+  /* ---------- early-access subscribe ---------- */
+  .subscribe{display:flex;gap:10px;flex-wrap:wrap;align-items:center;max-width:480px}
+  .subscribe input[type=email]{flex:1 1 220px;min-width:0;padding:12px 14px;border:1px solid var(--line);border-radius:12px;font-size:14px;font-family:inherit;color:var(--ink);background:#fff;outline:none;transition:border .15s}
+  .subscribe input[type=email]:focus{border-color:var(--blue)}
+  .subscribe .btn-primary{white-space:nowrap}
+  .subscribe[aria-busy=true]{opacity:.65;pointer-events:none}
+  .sub-error{flex-basis:100%;color:#C0392B;font-size:13px;margin:2px 0 0}
+  .sub-done{display:flex;align-items:center;gap:9px;font-size:14.5px;color:var(--mint);font-weight:600;max-width:480px}
+  .sub-done .tick{flex-shrink:0;width:22px;height:22px;border-radius:50%;background:#E3F6ED;color:#0A7A4A;display:flex;align-items:center;justify-content:center;font-size:13px}
+  .hero-sub{margin-top:26px}
+  .hero-sub .sub-hint{font-size:13px;color:var(--muted);margin:10px 0 0}
+  .sub-strip{max-width:1120px;margin:0 auto;padding:30px 24px;display:flex;align-items:center;justify-content:space-between;gap:22px;flex-wrap:wrap;border-top:1px solid var(--line)}
+  .sub-strip-text{max-width:46ch}
+  .sub-strip-text strong{display:block;font-family:'Space Grotesk',sans-serif;font-weight:700;font-size:18px;letter-spacing:-.01em;margin-bottom:4px}
+  .sub-strip-text span{color:var(--ink-2);font-size:14.5px}
   .auth-overlay{position:fixed;inset:0;background:rgba(10,27,61,.42);backdrop-filter:blur(4px);z-index:50;display:flex;align-items:center;justify-content:center;padding:20px}
   .auth-card{background:#fff;border-radius:20px;width:100%;max-width:420px;padding:34px;box-shadow:0 20px 60px rgba(10,27,61,.28);position:relative}
   .auth-card h2{font-size:24px;margin:14px 0 6px} .auth-card .sub{color:var(--ink-2);font-size:14px;margin:0 0 24px}
@@ -158,6 +173,7 @@
     .side{position:static;height:auto;flex-direction:row;align-items:center;gap:14px;padding:12px}
     .side-brand{padding:0;flex:1} .side-nav{flex-direction:row;gap:4px} .side-nav button span{display:none}
     .side-foot{display:none} .main{padding:22px} .nav-links{display:none}
+    .sub-strip{flex-direction:column;align-items:flex-start}
   }
 </style>
 </head>
@@ -182,6 +198,13 @@
       <button class="btn btn-ghost" onclick="document.getElementById('how').scrollIntoView({behavior:'smooth'})">See how it works</button>
     </div>
     <p class="hero-note">No card required · Connect one LinkedIn profile to start</p>
+    <div class="hero-sub">
+      <form class="subscribe js-subscribe" data-source="landing_hero" novalidate>
+        <input type="email" name="email" required autocomplete="email" placeholder="you@company.com" aria-label="Email address">
+        <button class="btn btn-primary" type="submit">Get early access →</button>
+      </form>
+      <p class="sub-hint">Not ready to start? Get launch news and new platforms first — one email, no spam.</p>
+    </div>
     <div class="hero-preview">
       <div class="hp-bar"><span class="hp-dot" style="background:#FF5F57"></span><span class="hp-dot" style="background:#FEBC2E"></span><span class="hp-dot" style="background:#28C840"></span></div>
       <div class="hp-body">
@@ -219,6 +242,16 @@
     <p>Set up your first week in a few minutes and see the whole thing run on its own.</p>
     <button class="btn btn-primary" onclick="openAuth('signup')">Start free →</button>
   </div></div>
+  <div class="sub-strip">
+    <div class="sub-strip-text">
+      <strong>Be first when we ship.</strong>
+      <span>New platforms, early access, and launch updates — straight to your inbox.</span>
+    </div>
+    <form class="subscribe js-subscribe" data-source="landing_footer" novalidate>
+      <input type="email" name="email" required autocomplete="email" placeholder="you@company.com" aria-label="Email address">
+      <button class="btn btn-primary" type="submit">Get early access →</button>
+    </form>
+  </div>
   <div class="footer">© 2026 Socialbotic · A PublicLeads project</div>
 </div>
 
@@ -574,6 +607,59 @@ function toast(msg){const t=document.getElementById('toast');t.textContent=msg;t
 (async()=>{
   const {data}=await sb.auth.getSession();
   if(data.session){CURRENT_USER=data.session.user;await enterApp();}
+})();
+</script>
+
+<script>
+/* ---------- early-access subscribe (landing) ---------- */
+(function(){
+  var EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+  document.querySelectorAll('form.js-subscribe').forEach(function(form){
+    form.addEventListener('submit', function(e){
+      e.preventDefault();
+      if(form.getAttribute('aria-busy') === 'true') return;
+      var input = form.querySelector('input[type=email]');
+      var btn = form.querySelector('button[type=submit]');
+      var email = (input.value || '').trim();
+      clearError(form);
+      if(!email || !EMAIL_RE.test(email)){ showError(form, 'Please enter a valid email address.'); return; }
+      var original = btn.textContent;
+      form.setAttribute('aria-busy','true');
+      btn.textContent = 'Adding…';
+      fetch('/api/subscribe', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email: email, source: form.dataset.source || 'landing_hero' })
+      })
+      .then(function(r){ return r.json().catch(function(){ return {}; }).then(function(d){ return { ok: r.ok, data: d }; }); })
+      .then(function(res){
+        if(!res.ok){
+          form.removeAttribute('aria-busy');
+          btn.textContent = original;
+          showError(form, (res.data && res.data.error) || 'Something went wrong — please try again.');
+          return;
+        }
+        confirmInPlace(form);
+      })
+      .catch(function(){
+        form.removeAttribute('aria-busy');
+        btn.textContent = original;
+        showError(form, 'Network error — please try again.');
+      });
+    });
+  });
+  function showError(form, msg){
+    var el = form.querySelector('.sub-error');
+    if(!el){ el = document.createElement('div'); el.className = 'sub-error'; form.appendChild(el); }
+    el.textContent = msg;
+  }
+  function clearError(form){ var el = form.querySelector('.sub-error'); if(el) el.remove(); }
+  function confirmInPlace(form){
+    var done = document.createElement('div');
+    done.className = 'sub-done';
+    done.innerHTML = '<span class="tick">✓</span><span>You’re on the list — we’ll email you when there’s early access.</span>';
+    form.replaceWith(done);
+  }
 })();
 </script>
 </body>
