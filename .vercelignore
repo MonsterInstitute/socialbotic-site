@@ -1,0 +1,5 @@
+# The static site is served from public/ (index.html, favicon.svg); api/ + lib/
+# are compiled into functions. Keep local/dev-only files out of the upload.
+.env*
+.DS_Store
+eslint.config.mjs
